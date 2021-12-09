@@ -42,6 +42,7 @@ class Sender : public cSimpleModule
   void makeSend(cMessage* msg);
   void updateTime(double delay);
   void reInit();
+  void openOutputFile(string fileName);
   protected:
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);

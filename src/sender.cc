@@ -42,6 +42,12 @@ void Sender::readFile(string fileName){
     }
     inputFile.close();
 }
+void Sender::openOutputFile(string fileName){
+    filebuf fb;
+    fb.open (fileName,std::ios::out);
+    ostream outputFile(&fb);
+    outputFile << "output Logs\n";
+}
 
 string Sender::byteStuffing (string message){
     for (int i  = 0; i  < message.size(); i++ ) {
@@ -99,7 +105,7 @@ cMessage * Sender::operations(string message ,int id ){
       messageToSend = this->modeification(byteStuffed);
       EV<<"modeif done\n";
     }
-    messageToSend = this->addHeader(messageToSend, id, 0, par("start_transmission_time").intValue()*1.0);
+    messageToSend = this->addHeader(messageToSend, id, 0, this->currentTime*1.0);
     int i = parityBit(messeages[0]);
     messageToSend.append(to_string(i));
     return new cMessage(messageToSend.c_str());
@@ -112,14 +118,14 @@ void Sender::makeSend(cMessage* msg){
         EV<<"not loss\n";
          if(this->duple){
              if(this->delay){
-                 EV<<"d d\n";
+                 EV<<"delay and duplicate\n";
                  updateTime(par("delay_time").intValue()*1.0);
                  sendDelayed(msg, this->currentTime, "out");
                  updateTime(0.01+par("delay_time").intValue()*1.0);
                  sendDelayed(dupMsg, this->currentTime, "out");
              }
              else{
-                 EV<<"dup \n";
+                 EV<<"duplicate \n";
                  send(msg, "out");
                  updateTime(0.01);
                  sendDelayed(dupMsg, this->currentTime, "out");
@@ -127,12 +133,12 @@ void Sender::makeSend(cMessage* msg){
          }
          else{
              if(this->delay){
-                 EV<<"del \n";
+                 EV<<"delay \n";
                  updateTime(par("delay_time").intValue()*1.0);
                  sendDelayed(msg, this->currentTime, "out");
              }
              else{
-                 EV<<"norm\n";
+                 EV<<"normal \n";
                  send(msg,"out");
              }
          }
@@ -150,7 +156,8 @@ void Sender::reInit(){
 
 
 void Sender::updateTime(double delay){
-    this->currentTime=this->currentTime + delay + simTime().dbl();
+    this->currentTime=this->currentTime + delay;
+
 }
 void Sender::initialize()
 {
@@ -159,9 +166,12 @@ void Sender::initialize()
     this->readFile(par("input_file"));
     for (int i = 0; i < messeages.size(); ++i) {
         cMessage * msg = this->operations(this->messeages[i], i);
+        EV << "message number " << i << " ,current Time :" << this->currentTime<<endl;
         makeSend(msg);
         reInit();
+        EV << "----------------------" <<endl ;
     }
+    this->openOutputFile(par("output_file"));
 }
 
 
