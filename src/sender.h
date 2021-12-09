@@ -28,18 +28,20 @@ class Sender : public cSimpleModule
 {
   string errorByte;
   string messageBody;
-  int currentTime;
+  double currentTime;
   bool mode = false, loss= false , duple = false, delay = false;
   vector<string> messeages;
   void readFile(string fileName);
   void extractErrorBytes(string message);
   void extractMessage(string message);
   string byteStuffing(string message);
-  string addHeader(string message, int id, int type,int sending_time);
+  string addHeader(string message, int id, int type,double sending_time);
   string modeification(string message);
   cMessage * operations(string message,int id);
   int parityBit(string message);
   void makeSend(cMessage* msg);
+  void updateTime(double delay);
+  void reInit();
   protected:
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);

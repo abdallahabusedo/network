@@ -53,7 +53,7 @@ string Sender::byteStuffing (string message){
     return message;
 }
 
-string Sender::addHeader(string message, int id, int type,int sending_time){
+string Sender::addHeader(string message, int id, int type,double sending_time){
     // need to fix as receiver can extract header in all cases
     message.insert(0,",");
     message.insert(0,to_string(type));
@@ -99,10 +99,9 @@ cMessage * Sender::operations(string message ,int id ){
       messageToSend = this->modeification(byteStuffed);
       EV<<"modeif done\n";
     }
-    messageToSend = this->addHeader(messageToSend, id, 0, par("start_transmission_time").intValue());
+    messageToSend = this->addHeader(messageToSend, id, 0, par("start_transmission_time").intValue()*1.0);
     int i = parityBit(messeages[0]);
     messageToSend.append(to_string(i));
-
     return new cMessage(messageToSend.c_str());
 
 }
@@ -114,19 +113,23 @@ void Sender::makeSend(cMessage* msg){
          if(this->duple){
              if(this->delay){
                  EV<<"d d\n";
-                 sendDelayed(msg, par("delay_time").intValue(), "out");
-                 sendDelayed(dupMsg, 0.01+par("delay_time").intValue(), "out");
+                 updateTime(par("delay_time").intValue()*1.0);
+                 sendDelayed(msg, this->currentTime, "out");
+                 updateTime(0.01+par("delay_time").intValue()*1.0);
+                 sendDelayed(dupMsg, this->currentTime, "out");
              }
              else{
                  EV<<"dup \n";
                  send(msg, "out");
-                 sendDelayed(dupMsg, simTime() + 0.01, "out");
+                 updateTime(0.01);
+                 sendDelayed(dupMsg, this->currentTime, "out");
              }
          }
          else{
              if(this->delay){
                  EV<<"del \n";
-                 sendDelayed(msg, par("delay_time").intValue(), "out");
+                 updateTime(par("delay_time").intValue()*1.0);
+                 sendDelayed(msg, this->currentTime, "out");
              }
              else{
                  EV<<"norm\n";
@@ -136,23 +139,34 @@ void Sender::makeSend(cMessage* msg){
     }
 }
 
+void Sender::reInit(){
+    this->errorByte = "";
+    this->messageBody="";
+    this->mode = false;
+    this->loss= false ;
+    this->duple = false;
+    this->delay = false;
+}
+
+
+void Sender::updateTime(double delay){
+    this->currentTime=this->currentTime + delay + simTime().dbl();
+}
 void Sender::initialize()
 {
     // TODO - Generated method body
-    this->currentTime = par("start_transmission_time").intValue();
+    this->currentTime = par("start_transmission_time").intValue()*1.0;
     this->readFile(par("input_file"));
-    cMessage * msg = this->operations(this->messeages[0], 0);
-    scheduleAt(simTime(), msg);
+    for (int i = 0; i < messeages.size(); ++i) {
+        cMessage * msg = this->operations(this->messeages[i], i);
+        makeSend(msg);
+        reInit();
+    }
 }
 
 
 void Sender::handleMessage(cMessage *msg)
 {
-    // TODO - Generated method body
-    if(msg->isSelfMessage()){
-        EV << "Received message from myself after delayed"<< endl;
-        makeSend(msg);
-    } else {
-        // ACK and NACK
-    }
+    EV << "Received message from myself after delayed"<< endl;
+    send(msg,"out");
 }
