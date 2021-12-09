@@ -27,4 +27,5 @@ void Receiver::handleMessage(cMessage *msg)
     // TODO - Generated method body
     send(msg,"out");
     EV << "i'm receiver"<< msg->getName() << endl;
+    EV << "i'm receiver simtime"<< simTime() << endl;
 }
