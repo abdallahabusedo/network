@@ -29,12 +29,16 @@ class Sender : public cSimpleModule
   string errorByte;
   string messageBody;
   int currentTime;
+  bool mode = false, loss= false , duple = false, delay = false;
   vector<string> messeages;
   void readFile(string fileName);
-  cMessage * byteStuffing(string message);
-  cMessage * addHeader(string message, int id, int type,int sending_time);
-  cMessage * modeification(string message);
-
+  void extractErrorBytes(string message);
+  void extractMessage(string message);
+  string byteStuffing(string message);
+  string addHeader(string message, int id, int type,int sending_time);
+  string modeification(string message);
+  cMessage * operations(string message,int id);
+  int parityBit(string message);
   protected:
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);

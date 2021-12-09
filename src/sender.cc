@@ -18,9 +18,17 @@
 Define_Module(Sender);
 using namespace std;
 
-cMessage * extractFromMessage(string message,int start , int end ){
-    string temp = message .substr(start,end);
-    return new cMessage(temp.c_str());
+void Sender::extractErrorBytes(string message){
+    string temp = message .substr(0,4);
+        if (temp[0] == '1' ){
+            this->mode = true;
+        }else if (temp[1]== '1'){
+            this->duple = true;
+        }else if (temp[2] == '1'){
+            this->delay = true;
+        }else if (temp[3] == '1'){
+            this->loss = true;
+        }
 }
 
 void Sender::readFile(string fileName){
@@ -32,48 +40,73 @@ void Sender::readFile(string fileName){
         inputFile.close();
 }
 
-cMessage * Sender::byteStuffing (string message){
+string Sender::byteStuffing (string message){
     for (int i  = 0; i  < message.size(); i++ ) {
            if (message[i]== '$'){
                message.insert(i, "/");
                 i++;
             }
     }
-    return new cMessage(message.c_str());
+    return message;
 }
 
-cMessage * Sender::addHeader(string message, int id, int type,int sending_time){
+string Sender::addHeader(string message, int id, int type,int sending_time){
     message.insert(0,to_string(type));
     message.insert(0,to_string(sending_time));
     message.insert(0,to_string(id));
-    return new cMessage(message.c_str());
+    return message;
 }
 
-cMessage * Sender::modeification(string message){
+string Sender::modeification(string message){
     int count = message.size();
     int ind = rand()%(count+1);
     bitset<8> b(message[ind]);
-//    int ind2 = rand()%(9);
-    int ind2 = 1;
-    EV  << char(b.to_ullong())<<" "<<b.to_ullong()<< endl;
+    int ind2 = rand()%(9);
     b[ind2-1].flip();
     message[ind]= char(b.to_ullong());
-    EV  << char(b.to_ullong())<<" "<<b.to_ullong() <<" " <<ind<< endl;
-    return new cMessage(message.c_str());
+    return message;
+
+}
+
+int Sender::parityBit(string message){
+    bitset<8> b(message[0]);
+    for (int i = 1; i < message.size(); i++) {
+        bitset<8> a(message[i]);
+        for (int j = 0; j < 8; ++j)
+            b[j] = b[j] ^ a[j];
+    }
+    int sum = 0;
+    for (int i = 0; i < 8; ++i) {
+        sum+=b[i];
+    }
+    if(sum%2==0)
+        return 0;
+    else
+        return 1;
+}
+
+cMessage * Sender::operations(string message ,int id ){
+    string byteStuffed = this->byteStuffing(message);
+    string messageToSend = this->addHeader(byteStuffed, id, 0, par("start_transmission_time"));
+    this->extractErrorBytes(message);
+    int i = parityBit(messeages[0]);
+    messageToSend.append(to_string(i));
+    if(this->mode){
+      messageToSend = this->modeification(messageToSend);
+    }
+
+    return new cMessage(messageToSend.c_str());
 
 }
 
 void Sender::initialize()
 {
     // TODO - Generated method body
-//    string x = "1010 A flower, sometimes known as a bloom or blossom";
-//    string errorbytes = x.substr(0,4);
-//    cMessage * msg = new cMessage(errorbytes.c_str());
-      this->currentTime = par("start_transmission_time").intValue();
-      this->readFile(par("input_file"));
-//      cMessage * msg = extractFromMessage(this->messeages[0],5,this->messeages[0].size());
-      cMessage * msg = modeification(this->messeages[0]);
-      send(msg,"out");
+    this->currentTime = par("start_transmission_time").intValue();
+    this->readFile(par("input_file"));
+    cMessage * msg = operations(this->messeages[0], 0);
+    send(msg,"out");
+
 }
 
 void Sender::handleMessage(cMessage *msg)
