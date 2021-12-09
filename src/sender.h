@@ -39,6 +39,7 @@ class Sender : public cSimpleModule
   string modeification(string message);
   cMessage * operations(string message,int id);
   int parityBit(string message);
+  void makeSend(cMessage* msg);
   protected:
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);

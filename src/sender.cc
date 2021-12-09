@@ -107,46 +107,51 @@ cMessage * Sender::operations(string message ,int id ){
 
 }
 
-void Sender::initialize()
-{
-    // TODO - Generated method body
-    this->currentTime = par("start_transmission_time").intValue();
-    this->readFile(par("input_file"));
-    cMessage * msg = operations(this->messeages[0], 0);
-
+void Sender::makeSend(cMessage* msg){
     if(!this->loss){
         EV<<"not loss\n";
          if(this->duple){
              if(this->delay){
                  EV<<"d d\n";
-                 sendDelayed(msg, par("delay_time").intValue(), "out");
-                 sendDelayed(msg, 0.01+par("delay_time").intValue(), "out");
+//                 sendDelayed(msg, par("delay_time").intValue(), "out");
+//                 sendDelayed(msg, 0.01+par("delay_time").intValue(), "out");
              }
              else{
                  EV<<"dup \n";
-                 send(msg, "out");
-                 wait(0.01);
-                 send(msg, "out");
+//                 send(msg, "out");
+                 sendDelayed(msg, simTime() + 0.01, "out");
              }
          }
          else{
              if(this->delay){
                  EV<<"del \n";
-                 sendDelayed(msg, par("delay_time").intValue(), "out");
+//                 sendDelayed(msg, par("delay_time").intValue(), "out");
              }
              else{
                  EV<<"norm\n";
-                 send(msg,"out");
+//                 send(msg,"out");
              }
          }
     }
+}
+
+void Sender::initialize()
+{
+    // TODO - Generated method body
+    this->currentTime = par("start_transmission_time").intValue();
+    this->readFile(par("input_file"));
+    cMessage * msg = this->operations(this->messeages[0], 0);
+    scheduleAt(simTime()+1, msg);
 }
 
 
 void Sender::handleMessage(cMessage *msg)
 {
     // TODO - Generated method body
-    send(msg ,"out");
-    EV << "Resending message"<< endl;
-
+    if(msg->isSelfMessage()){
+        EV << "Received message from myself after delayed"<< endl;
+        makeSend(msg);
+    } else {
+        // ACK and NACK
+    }
 }
