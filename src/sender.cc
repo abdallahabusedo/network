@@ -108,7 +108,6 @@ cMessage * Sender::operations(string message ,int id ){
     if(this->mode){
       messageToSend = this->modeification(byteStuffed);
       EV<<"modeif done\n";
-
     }
     messageToSend = this->addHeader(messageToSend, id, 0, this->currentTime*1.0);
     int i = parityBit(messeages[0]);
@@ -172,23 +171,28 @@ void Sender::initialize()
     this->readFile(par("input_file"));
     std::ofstream outputFile;
     string outputFileName = par("output_file");
-    outputFile.open(outputFileName,ios::out);
+    outputFile.open(outputFileName,std::ios_base::app);
     for (int i = 0; i < messeages.size(); ++i) {
         cMessage * msg = this->operations(this->messeages[i], i);
         EV << "message number " << i << " ,current Time :" << this->currentTime<<endl;
-        outputFile<<"- Sender sends message with type=0, id="<<i<<" and content="<<this->messeages[i]<<" at "<<this->currentTime<<" with "<<this->errorString<<"\n";
+        outputFile<<"- Sender sends message with type=0, id="<<i<<" and content="<<msg->getName()<<" at "<<this->currentTime<<" with "<<this->errorString<<"\n";
         makeSend(msg);
         reInit();
         EV << "----------------------" <<endl ;
     }
-    outputFile.close();
 }
-
 
 void Sender::handleMessage(cMessage *msg)
 {
     EV << "Received message from myself after delayed"<< endl;
     send(msg,"out");
-    // handel timeout
+    std::ofstream outputFile;
+    string outputFileName = par("output_file");
+    outputFile.open(outputFileName,std::ios_base::app);
+    outputFile << "- recevier sends message with type=? , id=? at ?\n";
 
+    // handel timeout // if NACK or timeout send the currect message without any modifications
+    // recevier (error detection , ACK/NACK , id&type , sync logs , op(hamming))
+    // simulation timer issue
+    // log file stutasic
 }

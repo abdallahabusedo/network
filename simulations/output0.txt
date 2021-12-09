@@ -1,7 +1,0 @@
-- Sender sends message with type=0, id=0 and content=1111 A flower, $sometimes known as $a bloom or blossom at 5 with modeification loss duplecation delay 
-- Sender sends message with type=0, id=1 and content=0000 is the reproductive$ structure found in flowering plants at 5 with 
-- Sender sends message with type=0, id=2 and content=0100 (plants of the division Magnoliophyta, also called/ angiosperms$). at 5 with loss 
-- Sender sends message with type=0, id=3 and content=0000 The biological function of a flower is to facilitate reproduction, at 5 with 
-- Sender sends message with type=0, id=4 and content=0001 usually by providing a mechanism for the union of sperm with eggs. at 5 with delay 
-- Sender sends message with type=0, id=5 and content=1011 Flowers may facilitate outcrossing$ at 8 with modeification duplecation delay 
-- Sender sends message with type=0, id=6 and content=0010 (fusion of sperm and eggs from different individuals in a population) at 14.01 with duplecation 
