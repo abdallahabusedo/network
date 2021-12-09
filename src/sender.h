@@ -29,6 +29,7 @@ class Sender : public cSimpleModule
   string errorByte;
   string messageBody;
   double currentTime;
+  string errorString="";
   bool mode = false, loss= false , duple = false, delay = false;
   vector<string> messeages;
   void readFile(string fileName);

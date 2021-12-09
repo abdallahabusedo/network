@@ -14,7 +14,13 @@
 // 
 
 #include "sender.h"
-#include <bits/stdc++.h>
+//#include <bits/stdc++.h>
+#include <fstream>
+#include <iostream>
+#include <algorithm>
+#include <bitset>
+#include <math.h>
+
 Define_Module(Sender);
 using namespace std;
 
@@ -22,15 +28,19 @@ void Sender::extractErrorBytes(string message){
     string temp = message .substr(0,4);
     if (temp[0] == '1' ){
         this->mode = true;
+        this->errorString.append("modeification ");
     }
     if (temp[1]== '1'){
         this->loss = true;
+        this->errorString.append("loss ");
     }
     if (temp[2] == '1'){
         this->duple = true;
+        this->errorString.append("duplecation ");
     }
     if (temp[3] == '1'){
         this->delay = true;
+        this->errorString.append("delay ");
     }
 }
 
@@ -41,12 +51,6 @@ void Sender::readFile(string fileName){
         this->messeages.push_back(line);
     }
     inputFile.close();
-}
-void Sender::openOutputFile(string fileName){
-    filebuf fb;
-    fb.open (fileName,std::ios::out);
-    ostream outputFile(&fb);
-    outputFile << "output Logs\n";
 }
 
 string Sender::byteStuffing (string message){
@@ -104,6 +108,7 @@ cMessage * Sender::operations(string message ,int id ){
     if(this->mode){
       messageToSend = this->modeification(byteStuffed);
       EV<<"modeif done\n";
+
     }
     messageToSend = this->addHeader(messageToSend, id, 0, this->currentTime*1.0);
     int i = parityBit(messeages[0]);
@@ -152,26 +157,31 @@ void Sender::reInit(){
     this->loss= false ;
     this->duple = false;
     this->delay = false;
+    this->errorString="";
 }
-
 
 void Sender::updateTime(double delay){
     this->currentTime=this->currentTime + delay;
 
 }
+
 void Sender::initialize()
 {
     // TODO - Generated method body
     this->currentTime = par("start_transmission_time").intValue()*1.0;
     this->readFile(par("input_file"));
+    std::ofstream outputFile;
+    string outputFileName = par("output_file");
+    outputFile.open(outputFileName,ios::out);
     for (int i = 0; i < messeages.size(); ++i) {
         cMessage * msg = this->operations(this->messeages[i], i);
         EV << "message number " << i << " ,current Time :" << this->currentTime<<endl;
+        outputFile<<"- Sender sends message with type=0, id="<<i<<" and content="<<this->messeages[i]<<" at "<<this->currentTime<<" with "<<this->errorString<<"\n";
         makeSend(msg);
         reInit();
         EV << "----------------------" <<endl ;
     }
-    this->openOutputFile(par("output_file"));
+    outputFile.close();
 }
 
 
@@ -179,4 +189,6 @@ void Sender::handleMessage(cMessage *msg)
 {
     EV << "Received message from myself after delayed"<< endl;
     send(msg,"out");
+    // handel timeout
+
 }
