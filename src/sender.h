@@ -18,6 +18,7 @@
 
 #include <omnetpp.h>
 #include <bits/stdc++.h>
+#include "MessageM_m.h"
 using namespace omnetpp;
 using namespace std;
 
@@ -26,21 +27,17 @@ using namespace std;
  */
 class Sender : public cSimpleModule
 {
-  string errorByte;
-  string messageBody;
-  double currentTime;
   string errorString="";
-  bool mode = false, loss= false , duple = false, delay = false;
+  double msgDelay = 1.0;
   vector<string> messeages;
   void readFile(string fileName);
-  void extractErrorBytes(string message);
-  void extractMessage(string message);
-  string byteStuffing(string message);
-  string addHeader(string message, int id, int type,double sending_time);
-  string modeification(string message);
-  cMessage * operations(string message,int id);
-  int parityBit(string message);
-  void makeSend(cMessage* msg);
+  void extractErrorBytes(MessageM_Base* message);
+  void byteStuffing(MessageM_Base* message);
+  void addHeader(MessageM_Base * message, int id, int type, double sending_time);
+  void modeification(MessageM_Base* message);
+  void operations(string message,int id);
+  void parityBit(MessageM_Base * message);
+  void makeSend(MessageM_Base * msg);
   void updateTime(double delay);
   void reInit();
   protected:

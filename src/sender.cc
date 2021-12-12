@@ -14,34 +14,107 @@
 // 
 
 #include "sender.h"
-//#include <bits/stdc++.h>
+#include <bits/stdc++.h>
 #include <fstream>
 #include <iostream>
 #include <algorithm>
 #include <bitset>
 #include <math.h>
-
+#include "MessageM_m.h"
 Define_Module(Sender);
 using namespace std;
 
-void Sender::extractErrorBytes(string message){
-    string temp = message .substr(0,4);
+void Sender::extractErrorBytes(MessageM_Base * message){
+    string temp = message->getPayload();
+    temp = temp.substr(0, 4);
     if (temp[0] == '1' ){
-        this->mode = true;
-        this->errorString.append("modeification ");
+        message->setMode(1);
+        this->errorString.append("Modification ");
     }
     if (temp[1]== '1'){
-        this->loss = true;
+        message->setLoss(1);
         this->errorString.append("loss ");
     }
     if (temp[2] == '1'){
-        this->duple = true;
-        this->errorString.append("duplecation ");
+        message->setDuple(1);
+        this->errorString.append("Duplication ");
     }
     if (temp[3] == '1'){
-        this->delay = true;
+        message->setDelay(1);
         this->errorString.append("delay ");
     }
+}
+
+void Sender::addHeader(MessageM_Base * message, int id, int type, double sending_time){
+    // need to fix as receiver can extract header in all cases
+    message->setId(id);
+    message->setType(type);
+    message->setSendingTime(sending_time);
+}
+
+void Sender::modeification(MessageM_Base* message){
+    string payload = message->getPayload();
+    int count = payload.size();
+    int ind = rand()%(count+1);
+    bitset<8> b(payload[ind]);
+    int ind2 = rand()%(9);
+    b[ind2-1].flip();
+    payload[ind]= char(b.to_ullong());
+    message->setPayload(payload.c_str());
+}
+
+void Sender::parityBit(MessageM_Base * message){
+    string payload = message->getPayload();
+    bitset<8> b(payload[0]);
+    for (int i = 1; i < payload.size(); i++) {
+        bitset<8> a(payload[i]);
+        b ^= a;
+    }
+    message->setTrailer(b);
+}
+
+void Sender::makeSend(MessageM_Base * msg){
+    MessageM_Base * dupMsg = msg->dup();
+    if(!msg->getLoss()){
+        EV<<"not loss\n";
+         if(msg->getDuple()){
+             if(msg->getDelay()){
+                 EV<<"delay and duplicate\n";
+//                 updateTime(par("delay_time").intValue()*1.0);
+                 sendDelayed(msg, par("delay_time").intValue()*1.0, "out");
+//                 updateTime(0.01+par("delay_time").intValue()*1.0);
+                 sendDelayed(dupMsg, 0.01+par("delay_time").intValue()*1.0, "out");
+             }
+             else{
+                 EV<<"duplicate \n";
+                 send(msg, "out");
+//                 updateTime(0.01);
+                 sendDelayed(dupMsg, 0.01, "out");
+             }
+         }
+         else{
+             if(msg->getDelay()){
+                 EV<<"delay \n";
+//                 updateTime(par("delay_time").intValue()*1.0);
+                 sendDelayed(msg,par("delay_time").intValue()*1.0, "out");
+             }
+             else{
+                 EV<<"normal \n";
+                 send(msg,"out");
+             }
+         }
+    }
+}
+
+void Sender::byteStuffing (MessageM_Base* message){
+    string temp = message->getPayload();
+    for (int i  = 0; i  < temp.size(); i++ ) {
+       if (temp[i]== '$'){
+           temp.insert(i, "/");
+            i++;
+        }
+    }
+    message->setPayload(temp.c_str());
 }
 
 void Sender::readFile(string fileName){
@@ -53,146 +126,51 @@ void Sender::readFile(string fileName){
     inputFile.close();
 }
 
-string Sender::byteStuffing (string message){
-    for (int i  = 0; i  < message.size(); i++ ) {
-       if (message[i]== '$'){
-           message.insert(i, "/");
-            i++;
-        }
-    }
-    return message;
-}
-
-string Sender::addHeader(string message, int id, int type,double sending_time){
-    // need to fix as receiver can extract header in all cases
-    message.insert(0,",");
-    message.insert(0,to_string(type));
-    message.insert(0,",");
-    message.insert(0,to_string(sending_time));
-    message.insert(0,",");
-    message.insert(0,to_string(id));
-    return message;
-}
-
-string Sender::modeification(string message){
-    int count = message.size();
-    int ind = rand()%(count+1);
-    bitset<8> b(message[ind]);
-    int ind2 = rand()%(9);
-    b[ind2-1].flip();
-    message[ind]= char(b.to_ullong());
-    return message;
-}
-
-int Sender::parityBit(string message){
-    bitset<8> b(message[0]);
-    for (int i = 1; i < message.size(); i++) {
-        bitset<8> a(message[i]);
-        b = b ^ a;
-    }
-    int sum = 0;
-    for (int i = 0; i < 8; ++i) {
-        sum+=b[i];
-    }
-    if(sum%2==0)
-        return 0;
-    else
-        return 1;
-}
-
-cMessage * Sender::operations(string message ,int id ){
-    this->extractErrorBytes(message);
-    string payload = message.substr(5,message.size());
-    string byteStuffed = this->byteStuffing(payload);
-    string messageToSend = byteStuffed;
-    if(this->mode){
-      messageToSend = this->modeification(byteStuffed);
-      EV<<"modeif done\n";
-    }
-    messageToSend = this->addHeader(messageToSend, id, 0, this->currentTime*1.0);
-    int i = parityBit(messeages[0]);
-    messageToSend.append(to_string(i));
-    return new cMessage(messageToSend.c_str());
-
-}
-
-void Sender::makeSend(cMessage* msg){
-    cMessage *dupMsg = msg->dup();
-    if(!this->loss){
-        EV<<"not loss\n";
-         if(this->duple){
-             if(this->delay){
-                 EV<<"delay and duplicate\n";
-                 updateTime(par("delay_time").intValue()*1.0);
-                 sendDelayed(msg, this->currentTime, "out");
-                 updateTime(0.01+par("delay_time").intValue()*1.0);
-                 sendDelayed(dupMsg, this->currentTime, "out");
-             }
-             else{
-                 EV<<"duplicate \n";
-                 send(msg, "out");
-                 updateTime(0.01);
-                 sendDelayed(dupMsg, this->currentTime, "out");
-             }
-         }
-         else{
-             if(this->delay){
-                 EV<<"delay \n";
-                 updateTime(par("delay_time").intValue()*1.0);
-                 sendDelayed(msg, this->currentTime, "out");
-             }
-             else{
-                 EV<<"normal \n";
-                 send(msg,"out");
-             }
-         }
-    }
-}
-
-void Sender::reInit(){
-    this->errorByte = "";
-    this->messageBody="";
-    this->mode = false;
-    this->loss= false ;
-    this->duple = false;
-    this->delay = false;
-    this->errorString="";
-}
-
-void Sender::updateTime(double delay){
-    this->currentTime=this->currentTime + delay;
-
-}
-
 void Sender::initialize()
 {
-    // TODO - Generated method body
-    this->currentTime = par("start_transmission_time").intValue()*1.0;
     this->readFile(par("input_file"));
-    std::ofstream outputFile;
-    string outputFileName = par("output_file");
-    outputFile.open(outputFileName,std::ios_base::app);
-    for (int i = 0; i < messeages.size(); ++i) {
-        cMessage * msg = this->operations(this->messeages[i], i);
-        EV << "message number " << i << " ,current Time :" << this->currentTime<<endl;
-        outputFile<<"- Sender sends message with type=0, id="<<i<<" and content="<<msg->getName()<<" at "<<this->currentTime<<" with "<<this->errorString<<"\n";
-        makeSend(msg);
-        reInit();
-        EV << "----------------------" <<endl ;
-    }
+    scheduleAt(par("start_transmission_time").intValue(),new cMessage("Start Transition"));
+
+    // TODO - Generated method body
+//    this->currentTime = par("start_transmission_time").intValue()*1.0;
+//    std::ofstream outputFile;
+//    string outputFileName = par("output_file");
+//    outputFile.open(outputFileName,std::ios_base::app);
+//    for (int i = 0; i < messeages.size(); ++i) {
+//        cMessage * msg = this->operations(this->messeages[i], i);
+//        EV << "message number " << i << " ,current Time :" << this->currentTime<<endl;
+//        outputFile<<"- Sender sends message with type=0, id="<<i<<" and content="<<msg->getName()<<" at "<<simTime()<<" with "<<this->errorString<<"\n";
+//        makeSend(msg);
+//        reInit();
+//        EV << "----------------------" <<endl ;
+//    }
 }
 
 void Sender::handleMessage(cMessage *msg)
 {
-    EV << "Received message from myself after delayed"<< endl;
-    send(msg,"out");
-    std::ofstream outputFile;
-    string outputFileName = par("output_file");
-    outputFile.open(outputFileName,std::ios_base::app);
-    outputFile << "- recevier sends message with type=? , id=? at ?\n";
 
-    // handel timeout // if NACK or timeout send the currect message without any modifications
-    // recevier (error detection , ACK/NACK , id&type , sync logs , op(hamming))
-    // simulation timer issue
-    // log file stutasic
+    if(msg->isSelfMessage()){
+     if(!strcmp(msg->getName(), "Start Transition")){
+         for (int i = 0; i < this->messeages.size(); ++i){
+             MessageM_Base * toSend = new MessageM_Base();
+             toSend->setPayload(this->messeages[i].c_str());
+             this->extractErrorBytes(toSend);
+             string payload = toSend->getPayload();
+             payload = payload.substr(5,this->messeages[i].size());
+             toSend->setPayload(payload.c_str());
+             this->byteStuffing(toSend);
+             if(toSend->getMode()){
+                 this->modeification(toSend);
+             }
+             this->addHeader(toSend, i, 0, simTime().dbl());
+             this->parityBit(toSend);
+             this->makeSend(toSend);
+         }
+     }else{
+         // timeout
+     }
+    }
+    else{
+        // ACK/NACK
+    }
 }
