@@ -27,15 +27,16 @@ using namespace std;
  */
 class Sender : public cSimpleModule
 {
+  cMessage* timeoutChecker;
   string errorString="";
-  double msgDelay = 1.0;
+  int incrementalId = 0;
   vector<string> messeages;
   void readFile(string fileName);
   void extractErrorBytes(MessageM_Base* message);
   void byteStuffing(MessageM_Base* message);
   void addHeader(MessageM_Base * message, int id, int type, double sending_time);
   void modeification(MessageM_Base* message);
-  void operations(string message,int id);
+  MessageM_Base * operations(string message,int id);
   void parityBit(MessageM_Base * message);
   void makeSend(MessageM_Base * msg);
   void updateTime(double delay);

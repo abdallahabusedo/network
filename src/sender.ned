@@ -21,9 +21,9 @@ package miniproject;
 simple Sender
 {
     parameters:
-        int start_transmission_time;
-	    int timeout_interval ;
-		int delay_time;
+        double start_transmission_time;
+	    double timeout_interval ;
+		double delay_time;
 		string input_file;
 		string output_file; 
       gates: 

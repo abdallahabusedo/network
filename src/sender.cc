@@ -75,28 +75,27 @@ void Sender::parityBit(MessageM_Base * message){
 
 void Sender::makeSend(MessageM_Base * msg){
     MessageM_Base * dupMsg = msg->dup();
+    if(msg->getMode()){
+         this->modeification(msg);
+    }
     if(!msg->getLoss()){
         EV<<"not loss\n";
          if(msg->getDuple()){
              if(msg->getDelay()){
                  EV<<"delay and duplicate\n";
-//                 updateTime(par("delay_time").intValue()*1.0);
-                 sendDelayed(msg, par("delay_time").intValue()*1.0, "out");
-//                 updateTime(0.01+par("delay_time").intValue()*1.0);
-                 sendDelayed(dupMsg, 0.01+par("delay_time").intValue()*1.0, "out");
+                 sendDelayed(msg, par("delay_time"), "out");
+                 sendDelayed(dupMsg, 0.01+par("delay_time").doubleValue(), "out");
              }
              else{
                  EV<<"duplicate \n";
                  send(msg, "out");
-//                 updateTime(0.01);
                  sendDelayed(dupMsg, 0.01, "out");
              }
          }
          else{
              if(msg->getDelay()){
                  EV<<"delay \n";
-//                 updateTime(par("delay_time").intValue()*1.0);
-                 sendDelayed(msg,par("delay_time").intValue()*1.0, "out");
+                 sendDelayed(msg,par("delay_time"), "out");
              }
              else{
                  EV<<"normal \n";
@@ -126,22 +125,34 @@ void Sender::readFile(string fileName){
     inputFile.close();
 }
 
+MessageM_Base * Sender::operations(string message, int id){
+    MessageM_Base * toSend = new MessageM_Base();
+    toSend->setPayload(message.c_str());
+    this->extractErrorBytes(toSend);
+    string payload = toSend->getPayload();
+    payload = payload.substr(5,message.size());
+    toSend->setPayload(payload.c_str());
+    this->byteStuffing(toSend);
+    this->addHeader(toSend, id, 0, simTime().dbl());
+    this->parityBit(toSend);
+    return toSend;
+}
+
 void Sender::initialize()
 {
     this->readFile(par("input_file"));
-    scheduleAt(par("start_transmission_time").intValue(),new cMessage("Start Transition"));
+    this->timeoutChecker = new cMessage("have timeout");
+    this->incrementalId = 0;
+    scheduleAt(par("start_transmission_time"),new cMessage("Start Transition"));
 
     // TODO - Generated method body
-//    this->currentTime = par("start_transmission_time").intValue()*1.0;
 //    std::ofstream outputFile;
 //    string outputFileName = par("output_file");
 //    outputFile.open(outputFileName,std::ios_base::app);
 //    for (int i = 0; i < messeages.size(); ++i) {
-//        cMessage * msg = this->operations(this->messeages[i], i);
 //        EV << "message number " << i << " ,current Time :" << this->currentTime<<endl;
 //        outputFile<<"- Sender sends message with type=0, id="<<i<<" and content="<<msg->getName()<<" at "<<simTime()<<" with "<<this->errorString<<"\n";
 //        makeSend(msg);
-//        reInit();
 //        EV << "----------------------" <<endl ;
 //    }
 }
@@ -149,28 +160,29 @@ void Sender::initialize()
 void Sender::handleMessage(cMessage *msg)
 {
 
+     string current = this->messeages[0];
+     MessageM_Base * toSend = operations(current,this->incrementalId++);
     if(msg->isSelfMessage()){
-     if(!strcmp(msg->getName(), "Start Transition")){
-         for (int i = 0; i < this->messeages.size(); ++i){
-             MessageM_Base * toSend = new MessageM_Base();
-             toSend->setPayload(this->messeages[i].c_str());
-             this->extractErrorBytes(toSend);
-             string payload = toSend->getPayload();
-             payload = payload.substr(5,this->messeages[i].size());
-             toSend->setPayload(payload.c_str());
-             this->byteStuffing(toSend);
-             if(toSend->getMode()){
-                 this->modeification(toSend);
-             }
-             this->addHeader(toSend, i, 0, simTime().dbl());
-             this->parityBit(toSend);
+        if(!strcmp(msg->getName(), "Start Transition")){
              this->makeSend(toSend);
-         }
-     }else{
+             scheduleAt(simTime()+par("timeout_interval"), this->timeoutChecker);
+     }  else{
          // timeout
+        send(toSend, "out");
      }
     }
     else{
-        // ACK/NACK
+        MessageM_Base *mmsg = check_and_cast<MessageM_Base *>(msg);
+        if(mmsg->getType()==1){
+            // ACK
+            cancelEvent(this->timeoutChecker);
+            this->messeages.erase(this->messeages.begin());
+            scheduleAt(simTime().dbl(),new cMessage("Start Transition"));
+        }else {
+            // NACK
+            cancelEvent(this->timeoutChecker);
+            send(toSend, "out");
+            scheduleAt(simTime()+par("timeout_interval"), this->timeoutChecker);
+        }
     }
 }
