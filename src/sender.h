@@ -38,7 +38,7 @@ class Sender : public cSimpleModule
   void modeification(MessageM_Base* message);
   MessageM_Base * operations(string message,int id);
   void parityBit(MessageM_Base * message);
-  void makeSend(MessageM_Base * msg);
+  bool makeSend(MessageM_Base * msg);
   void updateTime(double delay);
   void reInit();
   protected:

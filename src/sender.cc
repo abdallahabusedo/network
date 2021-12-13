@@ -15,6 +15,7 @@
 
 #include "sender.h"
 #include <bits/stdc++.h>
+#include<stdio.h>
 #include <fstream>
 #include <iostream>
 #include <algorithm>
@@ -26,6 +27,7 @@ using namespace std;
 
 void Sender::extractErrorBytes(MessageM_Base * message){
     string temp = message->getPayload();
+    this->errorString = "";
     temp = temp.substr(0, 4);
     if (temp[0] == '1' ){
         message->setMode(1);
@@ -73,7 +75,7 @@ void Sender::parityBit(MessageM_Base * message){
     message->setTrailer(b);
 }
 
-void Sender::makeSend(MessageM_Base * msg){
+bool Sender::makeSend(MessageM_Base * msg){
     MessageM_Base * dupMsg = msg->dup();
     if(msg->getMode()){
          this->modeification(msg);
@@ -83,7 +85,7 @@ void Sender::makeSend(MessageM_Base * msg){
          if(msg->getDuple()){
              if(msg->getDelay()){
                  EV<<"delay and duplicate\n";
-                 sendDelayed(msg, par("delay_time"), "out");
+                 sendDelayed(msg, par("delay_time").doubleValue(), "out");
                  sendDelayed(dupMsg, 0.01+par("delay_time").doubleValue(), "out");
              }
              else{
@@ -95,14 +97,17 @@ void Sender::makeSend(MessageM_Base * msg){
          else{
              if(msg->getDelay()){
                  EV<<"delay \n";
-                 sendDelayed(msg,par("delay_time"), "out");
+                 sendDelayed(msg,par("delay_time").doubleValue(), "out");
              }
              else{
                  EV<<"normal \n";
                  send(msg,"out");
              }
          }
+    } else {
+        return 0;
     }
+    return 1;
 }
 
 void Sender::byteStuffing (MessageM_Base* message){
@@ -159,30 +164,52 @@ void Sender::initialize()
 
 void Sender::handleMessage(cMessage *msg)
 {
-
+     std::ofstream outputFile;
+     string outputFileName = par("output_file");
+     outputFile.open(outputFileName,std::ios_base::app);
      string current = this->messeages[0];
-     MessageM_Base * toSend = operations(current,this->incrementalId++);
+     MessageM_Base * toSend = operations(current,this->incrementalId);
     if(msg->isSelfMessage()){
         if(!strcmp(msg->getName(), "Start Transition")){
-             this->makeSend(toSend);
-             scheduleAt(simTime()+par("timeout_interval"), this->timeoutChecker);
+             bool hasSent = this->makeSend(toSend);
+             outputFile<<"- Sender sends message with type="<<toSend->getType()
+                     <<", id="<<toSend->getId()<<" and content="<<toSend->getPayload()
+                     <<" at "<<simTime().dbl()<<" with "<<this->errorString<<endl;
+             if(!hasSent){
+                 this->messeages.erase(this->messeages.begin());
+                 scheduleAt(simTime().dbl()+par("timeout_interval").doubleValue(), new cMessage("Start Transition"));
+             }else {
+                 scheduleAt(simTime().dbl()+par("timeout_interval").doubleValue(), this->timeoutChecker);
+             }
      }  else{
          // timeout
-        send(toSend, "out");
+         outputFile<<"timeout\n";
+         send(toSend, "out");
+         outputFile<<"- Sender sends message with type="<<toSend->getType()
+                  <<", id="<<toSend->getId()<<" and content="<<toSend->getPayload()
+                  <<" at "<<simTime().dbl()<<" with "<<this->errorString<<endl;
+         scheduleAt(simTime().dbl()+par("timeout_interval").doubleValue(), this->timeoutChecker);
      }
     }
     else{
         MessageM_Base *mmsg = check_and_cast<MessageM_Base *>(msg);
         if(mmsg->getType()==1){
             // ACK
+            outputFile<<"- Sender received ACK\n";
             cancelEvent(this->timeoutChecker);
             this->messeages.erase(this->messeages.begin());
             scheduleAt(simTime().dbl(),new cMessage("Start Transition"));
+            this->incrementalId = 1 - this->incrementalId;
         }else {
             // NACK
+            outputFile<<"- Sender received NACK\n";
             cancelEvent(this->timeoutChecker);
             send(toSend, "out");
-            scheduleAt(simTime()+par("timeout_interval"), this->timeoutChecker);
+            outputFile<<"- Sender sends message with type="<<toSend->getType()
+                              <<", id="<<toSend->getId()<<" and content="<<toSend->getPayload()
+                              <<" at "<<simTime().dbl()<<" with "<<this->errorString<<endl;
+            scheduleAt(simTime().dbl()+par("timeout_interval").doubleValue(), this->timeoutChecker);
         }
     }
+    outputFile.close();
 }

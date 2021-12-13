@@ -20,6 +20,8 @@ package miniproject;
 //
 simple Receiver
 {
+    parameters:
+		string output_file ; 
     gates: 
         input in;
         output out;

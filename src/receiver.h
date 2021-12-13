@@ -17,7 +17,7 @@
 #define __MINIPROJECT_RECEIVER_H_
 
 #include <omnetpp.h>
-
+#include "MessageM_m.h"
 using namespace omnetpp;
 
 /**
@@ -25,6 +25,9 @@ using namespace omnetpp;
  */
 class Receiver : public cSimpleModule
 {
+    int expectedMessageId;
+    const double sendingDelay = 0.2;
+    bool getParityByte(MessageM_Base * message);
   protected:
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);
