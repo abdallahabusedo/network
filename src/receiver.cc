@@ -45,30 +45,27 @@ void Receiver::handleMessage(cMessage *msg)
      string outputFileName = par("output_file");
      outputFile.open(outputFileName,std::ios_base::app);
     MessageM_Base *mmsg = check_and_cast<MessageM_Base *>(msg);
+
     if(mmsg->getId() == this->expectedMessageId){
         outputFile<<"- Receiver received message with type="<<mmsg->getType()
                   <<", id="<<mmsg->getId()<<" and content="<<mmsg->getPayload()
-                  <<" at "<<simTime().dbl()<<endl;
+                  <<" at "<<mmsg->getSendingTime()<<endl;
         if(this->getParityByte(mmsg)){
+            // ACK
             MessageM_Base* ack = new MessageM_Base();
             ack->setId(1-this->expectedMessageId);
             ack->setType(1);
-            ack->setSendingTime(simTime().dbl());
-            outputFile<<"- Receiver sends message with type="<<ack->getType()
-                  <<", id="<<ack->getId()<<" and content="<<ack->getPayload()
-                  <<" at "<<simTime().dbl()<< "after delay " << simTime().dbl()+this->sendingDelay <<endl;
-            EV << simTime().dbl()+this->sendingDelay <<endl;
-            sendDelayed(ack, simTime().dbl()+this->sendingDelay, "out");
+            ack->setSendingTime(simTime().dbl()+this->sendingDelay);
+            outputFile<<"- Receiver sends ACK at "<<simTime()<<endl;
             this->expectedMessageId = 1- this->expectedMessageId;
+            sendDelayed(ack, ack->getSendingTime(), "out");
         } else {
             MessageM_Base* nack = new MessageM_Base();
             nack->setId(this->expectedMessageId);
             nack->setType(2);
-            nack->setSendingTime(simTime().dbl());
-            outputFile<<"- Receiver sends message with type="<<nack->getType()
-                  <<", id="<<nack->getId()<<" and content="<<nack->getPayload()
-                  <<" at "<<simTime().dbl()<< "after delay " << simTime().dbl()+this->sendingDelay<<endl;
-            sendDelayed(nack, simTime().dbl()+this->sendingDelay, "out");
+            nack->setSendingTime(simTime().dbl()+this->sendingDelay);
+            outputFile<<"- Receiver sends NACK" <<endl;
+            sendDelayed(nack, nack->getSendingTime(), "out");
         }
     }
     outputFile.close();
