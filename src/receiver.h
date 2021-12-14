@@ -26,7 +26,7 @@ using namespace omnetpp;
 class Receiver : public cSimpleModule
 {
     int expectedMessageId;
-    const double sendingDelay = 0.2;
+    double sendingDelay = 0.2;
     bool getParityByte(MessageM_Base * message);
   protected:
     virtual void initialize();

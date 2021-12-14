@@ -81,26 +81,26 @@ bool Sender::makeSend(MessageM_Base * msg){
          this->modeification(msg);
     }
     if(!msg->getLoss()){
-        EV<<"not loss\n";
+//        EV<<"not loss\n";
          if(msg->getDuple()){
              if(msg->getDelay()){
-                 EV<<"delay and duplicate\n";
+//                 EV<<"delay and duplicate\n";
                  sendDelayed(msg, par("delay_time").doubleValue(), "out");
                  sendDelayed(dupMsg, 0.01+par("delay_time").doubleValue(), "out");
              }
              else{
-                 EV<<"duplicate \n";
+//                 EV<<"duplicate \n";
                  send(msg, "out");
                  sendDelayed(dupMsg, 0.01, "out");
              }
          }
          else{
              if(msg->getDelay()){
-                 EV<<"delay \n";
+//                 EV<<"delay \n";
                  sendDelayed(msg,par("delay_time").doubleValue(), "out");
              }
              else{
-                 EV<<"normal \n";
+//                 EV<<"normal \n";
                  send(msg,"out");
              }
          }
@@ -176,14 +176,15 @@ void Sender::handleMessage(cMessage *msg)
                      <<", id="<<toSend->getId()<<" and content="<<toSend->getPayload()
                      <<" at "<<simTime().dbl()<<" with "<<this->errorString<<endl;
              if(!hasSent){
-                 this->messeages.erase(this->messeages.begin());
-                 scheduleAt(simTime().dbl()+par("timeout_interval").doubleValue(), new cMessage("Start Transition"));
+                 this->messeages.pop_front();
+                 scheduleAt(simTime().dbl(), new cMessage("Start Transition"));
              }else {
                  scheduleAt(simTime().dbl()+par("timeout_interval").doubleValue(), this->timeoutChecker);
              }
-     }  else{
+     }
+     else{
          // timeout
-         outputFile<<"timeout\n";
+         outputFile<<"- timeout\n";
          send(toSend, "out");
          outputFile<<"- Sender sends message with type="<<toSend->getType()
                   <<", id="<<toSend->getId()<<" and content="<<toSend->getPayload()
@@ -195,14 +196,14 @@ void Sender::handleMessage(cMessage *msg)
         MessageM_Base *mmsg = check_and_cast<MessageM_Base *>(msg);
         if(mmsg->getType()==1){
             // ACK
-            outputFile<<"- Sender received ACK\n";
+            outputFile<<"- Sender received ACK at time " << simTime().dbl()<< endl;
             cancelEvent(this->timeoutChecker);
-            this->messeages.erase(this->messeages.begin());
+            this->messeages.pop_front();
             scheduleAt(simTime().dbl(),new cMessage("Start Transition"));
             this->incrementalId = 1 - this->incrementalId;
-        }else {
+        }else  {
             // NACK
-            outputFile<<"- Sender received NACK\n";
+            outputFile<<"- Sender received NACK at time " << simTime().dbl()<< endl;
             cancelEvent(this->timeoutChecker);
             send(toSend, "out");
             outputFile<<"- Sender sends message with type="<<toSend->getType()

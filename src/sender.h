@@ -30,7 +30,7 @@ class Sender : public cSimpleModule
   cMessage* timeoutChecker;
   string errorString="";
   int incrementalId = 0;
-  vector<string> messeages;
+  deque<string> messeages;
   void readFile(string fileName);
   void extractErrorBytes(MessageM_Base* message);
   void byteStuffing(MessageM_Base* message);

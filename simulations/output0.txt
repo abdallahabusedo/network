@@ -1,0 +1,6 @@
+- Sender sends message with type=0, id=0 and content=is the reproductive/$ structure found in flowering plants at 5 with 
+- Receiver received message with type=0, id=0 and content=is the reproductive/$ structure found in flowering plants at 5
+- Receiver sends message with type=1, id=1 and content= at 5after delay 5.2
+- timeout
+- Sender sends message with type=0, id=0 and content=is the reproductive/$ structure found in flowering plants at 9 with 
+- Sender received ACK at time 10.2

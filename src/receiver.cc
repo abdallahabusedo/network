@@ -56,7 +56,8 @@ void Receiver::handleMessage(cMessage *msg)
             ack->setSendingTime(simTime().dbl());
             outputFile<<"- Receiver sends message with type="<<ack->getType()
                   <<", id="<<ack->getId()<<" and content="<<ack->getPayload()
-                  <<" at "<<simTime().dbl()<<endl;
+                  <<" at "<<simTime().dbl()<< "after delay " << simTime().dbl()+this->sendingDelay <<endl;
+            EV << simTime().dbl()+this->sendingDelay <<endl;
             sendDelayed(ack, simTime().dbl()+this->sendingDelay, "out");
             this->expectedMessageId = 1- this->expectedMessageId;
         } else {
@@ -66,7 +67,7 @@ void Receiver::handleMessage(cMessage *msg)
             nack->setSendingTime(simTime().dbl());
             outputFile<<"- Receiver sends message with type="<<nack->getType()
                   <<", id="<<nack->getId()<<" and content="<<nack->getPayload()
-                  <<" at "<<simTime().dbl()<<endl;
+                  <<" at "<<simTime().dbl()<< "after delay " << simTime().dbl()+this->sendingDelay<<endl;
             sendDelayed(nack, simTime().dbl()+this->sendingDelay, "out");
         }
     }
