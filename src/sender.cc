@@ -81,26 +81,21 @@ void Sender::makeSend(MessageM_Base * msg){
          this->modeification(msg);
     }
     if(!msg->getLoss()){
-//        EV<<"not loss\n";
          if(msg->getDuple()){
              if(msg->getDelay()){
-//                 EV<<"delay and duplicate\n";
                  sendDelayed(msg, par("delay_time").doubleValue(), "out");
                  sendDelayed(dupMsg, 0.01+par("delay_time").doubleValue(), "out");
              }
              else{
-//                 EV<<"duplicate \n";
                  send(msg, "out");
                  sendDelayed(dupMsg, 0.01, "out");
              }
          }
          else{
              if(msg->getDelay()){
-//                 EV<<"delay \n";
                  sendDelayed(msg,par("delay_time").doubleValue(), "out");
              }
              else{
-//                 EV<<"normal \n";
                  send(msg,"out");
              }
          }
@@ -148,14 +143,14 @@ void Sender::initialize()
     scheduleAt(par("start_transmission_time"),new cMessage("Start Transition"));
 }
 
-void Sender::handleMessage(cMessage *msg)
-{
-     std::ofstream outputFile;
-     string outputFileName = par("output_file");
-     outputFile.open(outputFileName,std::ios_base::app);
-     string current = this->messeages[0];
-
+void Sender::handleMessage(cMessage *msg) {
+    if(this->messeages.empty()) return;
+    std::ofstream outputFile;
+    string outputFileName = par("output_file");
+    outputFile.open(outputFileName,std::ios_base::app);
+    string current = this->messeages[0];
     MessageM_Base * toSend = operations(current,this->incrementalId);
+
     if(msg->isSelfMessage()){
         if(!strcmp(msg->getName(), "Start Transition")){
              this->makeSend(toSend);
@@ -166,13 +161,13 @@ void Sender::handleMessage(cMessage *msg)
         } else if(!strcmp(msg->getName(), "have timeout")) {
              // timeout
              cancelEvent(this->timeoutChecker);
-             outputFile<<"- timeout\n";
+             outputFile<<"- timeout detected\n";
              send(toSend, "out");
              outputFile<<"- Sender re-sends correct message with type="<<toSend->getType()
                        <<", id="<<toSend->getId()<<" and content ["<<toSend->getPayload()
                        <<"] at "<<simTime().dbl()<<endl;
              scheduleAt(simTime().dbl()+par("timeout_interval").doubleValue(), this->timeoutChecker);
-       }
+        }
     } else {
         MessageM_Base *mmsg = check_and_cast<MessageM_Base *>(msg);
         cancelEvent(this->timeoutChecker);
@@ -180,8 +175,8 @@ void Sender::handleMessage(cMessage *msg)
             // ACK
             outputFile<<"- Sender received ACK at time " <<simTime().dbl()<< endl;
             this->messeages.pop_front();
-            scheduleAt(simTime().dbl(), new cMessage("Start Transition"));
             this->incrementalId = 1 - this->incrementalId;
+            scheduleAt(simTime().dbl(), new cMessage("Start Transition"));
         } else {
             // NACK
             outputFile<<"- Sender received NACK at time " <<simTime().dbl()<< endl;
@@ -193,5 +188,8 @@ void Sender::handleMessage(cMessage *msg)
         }
     }
     outputFile.close();
-    finish();
+}
+
+void Sender::finish(){
+    EV<<"Sender finished at "<<simTime().dbl()<<endl;
 }

@@ -1,0 +1,4 @@
+- Sender sends message with type=0, id=0 and content [is the reproductive/$ structure found in flowering plants] at 5 with 
+- Receiver received message with type=0, id=0 and content [is the reproductive/$ structure found in flowering plants] at 5
+- Receiver sends ACK at 5
+- Sender received ACK at time 5.2

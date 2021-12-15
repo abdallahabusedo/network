@@ -36,23 +36,22 @@ void Receiver::initialize()
     this->expectedMessageId = 0;
 }
 
-void Receiver::handleMessage(cMessage *msg)
-{
+void Receiver::handleMessage(cMessage *msg) {
     std::ofstream outputFile;
-     string outputFileName = par("output_file");
-     outputFile.open(outputFileName,std::ios_base::app);
+    string outputFileName = par("output_file");
+    outputFile.open(outputFileName,std::ios_base::app);
     MessageM_Base *mmsg = check_and_cast<MessageM_Base *>(msg);
 
     if(mmsg->getId() == this->expectedMessageId){
         outputFile<<"- Receiver received message with type="<<mmsg->getType()
                   <<", id="<<mmsg->getId()<<" and content ["<<mmsg->getPayload()
-                  <<"] at "<<mmsg->getSendingTime()<<endl;
+                  <<"] at "<<simTime().dbl()<<endl;
         if(this->getParityByte(mmsg)){
             // ACK
             MessageM_Base* ack = new MessageM_Base();
             ack->setId(1-this->expectedMessageId);
             ack->setType(1);
-            outputFile<<"- Receiver sends ACK at "<<simTime()<<endl;
+            outputFile<<"- Receiver sends ACK at "<<simTime().dbl()<<endl;
             this->expectedMessageId = 1- this->expectedMessageId;
             sendDelayed(ack, this->sendingDelay, "out");
         } else {
@@ -63,6 +62,12 @@ void Receiver::handleMessage(cMessage *msg)
             outputFile<<"- Receiver sends NACK at "<<simTime().dbl()<<endl;
             sendDelayed(nack, this->sendingDelay, "out");
         }
+    } else {
+        outputFile<<"- Receiver received and discarded unexpected message at "<<simTime().dbl()<<endl;
     }
     outputFile.close();
+}
+
+void Receiver::finish(){
+    EV<<"Receiver finished at "<<simTime().dbl()<<endl;
 }
