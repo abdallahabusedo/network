@@ -154,46 +154,44 @@ void Sender::handleMessage(cMessage *msg)
      string outputFileName = par("output_file");
      outputFile.open(outputFileName,std::ios_base::app);
      string current = this->messeages[0];
-     cancelEvent(this->timeoutChecker);
+
+    MessageM_Base * toSend = operations(current,this->incrementalId);
     if(msg->isSelfMessage()){
-        MessageM_Base * toSend = operations(current,this->incrementalId);
         if(!strcmp(msg->getName(), "Start Transition")){
-
              this->makeSend(toSend);
-             outputFile<<"- Sender1 sends message with type="<<toSend->getType()
-                     <<", id="<<toSend->getId()<<" and content="<<toSend->getPayload()
-                     <<" at "<<toSend->getSendingTime()<<" with "<<this->errorString<<endl;
-
-//             scheduleAt(toSend->getSendingTime()+par("timeout_interval").doubleValue(), this->timeoutChecker);
-     }
-        else if(!strcmp(msg->getName(), "have timeout")) {
+             outputFile<<"- Sender sends message with type="<<toSend->getType()
+                     <<", id="<<toSend->getId()<<" and content ["<<toSend->getPayload()
+                     <<"] at "<<simTime().dbl()<<" with "<<this->errorString<<endl;
+             scheduleAt(simTime().dbl()+par("timeout_interval").doubleValue(), this->timeoutChecker);
+        } else if(!strcmp(msg->getName(), "have timeout")) {
              // timeout
+             cancelEvent(this->timeoutChecker);
              outputFile<<"- timeout\n";
              send(toSend, "out");
-             outputFile<<"- Sender2 sends message with type="<<toSend->getType()
-                      <<", id="<<toSend->getId()<<" and content="<<toSend->getPayload()
-                      <<" at "<<toSend->getSendingTime()<<" with "<<this->errorString<<endl;
-             scheduleAt(toSend->getSendingTime()+par("timeout_interval").doubleValue(), this->timeoutChecker);
+             outputFile<<"- Sender re-sends correct message with type="<<toSend->getType()
+                       <<", id="<<toSend->getId()<<" and content ["<<toSend->getPayload()
+                       <<"] at "<<simTime().dbl()<<endl;
+             scheduleAt(simTime().dbl()+par("timeout_interval").doubleValue(), this->timeoutChecker);
        }
     } else {
         MessageM_Base *mmsg = check_and_cast<MessageM_Base *>(msg);
+        cancelEvent(this->timeoutChecker);
         if(mmsg->getType()==1){
             // ACK
-            outputFile<<"- Sender received ACK at time " <<mmsg->getSendingTime()<< endl;
-//            cancelEvent(this->timeoutChecker);
+            outputFile<<"- Sender received ACK at time " <<simTime().dbl()<< endl;
             this->messeages.pop_front();
-            scheduleAt(mmsg->getSendingTime(),new cMessage("Start Transition"));
+            scheduleAt(simTime().dbl(), new cMessage("Start Transition"));
             this->incrementalId = 1 - this->incrementalId;
         } else {
             // NACK
-            outputFile<<"- Sender received NACK at time " << mmsg->getSendingTime()<< endl;
-//            cancelEvent(this->timeoutChecker);
-            send(mmsg, "out");
-            outputFile<<"- Sender sends message with type="<<mmsg->getType()
-                              <<", id="<<mmsg->getId()<<" and content="<<mmsg->getPayload()
-                              <<" at "<<simTime().dbl()<<" with "<<this->errorString<<endl;
-            scheduleAt(mmsg->getSendingTime()+par("timeout_interval").doubleValue(), this->timeoutChecker);
+            outputFile<<"- Sender received NACK at time " <<simTime().dbl()<< endl;
+            send(toSend, "out");
+            outputFile<<"- Sender re-sends correct message with type="<<toSend->getType()
+                              <<", id="<<toSend->getId()<<" and content ["<<toSend->getPayload()
+                              <<"] at "<<simTime().dbl()<<endl;
+            scheduleAt(simTime().dbl()+par("timeout_interval").doubleValue(), this->timeoutChecker);
         }
     }
     outputFile.close();
+    finish();
 }

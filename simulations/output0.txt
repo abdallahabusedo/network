@@ -1,7 +1,0 @@
-- Sender1 sends message with type=0, id=0 and content=is the reproductive/$ structure found in f,owering plants at 5 with Modification Duplication delay 
-- Receiver received message with type=0, id=0 and content=is the reproductive/$ structure found in f,owering plants at 5
-- Receiver sends NACK
-- Receiver received message with type=0, id=0 and content=is the reproductive/$ structure found in flowering plants at 5
-- Receiver sends ACK at 8.01
-- Sender received NACK at time 8.2
-- Sender sends message with type=2, id=0 and content= at 16.2 with Modification Duplication delay 

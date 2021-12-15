@@ -33,14 +33,11 @@ bool Receiver::getParityByte(MessageM_Base * message){
 
 void Receiver::initialize()
 {
-    // TODO - Generated method body
     this->expectedMessageId = 0;
 }
 
 void Receiver::handleMessage(cMessage *msg)
 {
-    // TODO - Generated method body
-    // cast to MessageM
     std::ofstream outputFile;
      string outputFileName = par("output_file");
      outputFile.open(outputFileName,std::ios_base::app);
@@ -48,24 +45,23 @@ void Receiver::handleMessage(cMessage *msg)
 
     if(mmsg->getId() == this->expectedMessageId){
         outputFile<<"- Receiver received message with type="<<mmsg->getType()
-                  <<", id="<<mmsg->getId()<<" and content="<<mmsg->getPayload()
-                  <<" at "<<mmsg->getSendingTime()<<endl;
+                  <<", id="<<mmsg->getId()<<" and content ["<<mmsg->getPayload()
+                  <<"] at "<<mmsg->getSendingTime()<<endl;
         if(this->getParityByte(mmsg)){
             // ACK
             MessageM_Base* ack = new MessageM_Base();
             ack->setId(1-this->expectedMessageId);
             ack->setType(1);
-            ack->setSendingTime(simTime().dbl()+this->sendingDelay);
             outputFile<<"- Receiver sends ACK at "<<simTime()<<endl;
             this->expectedMessageId = 1- this->expectedMessageId;
-            sendDelayed(ack, ack->getSendingTime(), "out");
+            sendDelayed(ack, this->sendingDelay, "out");
         } else {
+            // NACK
             MessageM_Base* nack = new MessageM_Base();
             nack->setId(this->expectedMessageId);
             nack->setType(2);
-            nack->setSendingTime(simTime().dbl()+this->sendingDelay);
-            outputFile<<"- Receiver sends NACK" <<endl;
-            sendDelayed(nack, nack->getSendingTime(), "out");
+            outputFile<<"- Receiver sends NACK at "<<simTime().dbl()<<endl;
+            sendDelayed(nack, this->sendingDelay, "out");
         }
     }
     outputFile.close();
