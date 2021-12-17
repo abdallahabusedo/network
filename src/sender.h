@@ -30,6 +30,8 @@ class Sender : public cSimpleModule
   cMessage* timeoutChecker;
   string errorString="";
   int incrementalId = 0;
+  double numberOfTransmissions = 0;
+  double numberOfDataTransmissions = 0;
   deque<string> messeages;
   void readFile(string fileName);
   void extractErrorBytes(MessageM_Base* message);
@@ -38,12 +40,14 @@ class Sender : public cSimpleModule
   void modeification(MessageM_Base* message);
   MessageM_Base * operations(string message,int id);
   void parityBit(MessageM_Base * message);
-  bool makeSend(MessageM_Base * msg);
+  void makeSend(MessageM_Base * msg);
   void updateTime(double delay);
   void reInit();
+  void logEvent(MessageM_Base* message,double time,string type);
   protected:
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);
+    virtual void finish();
 };
 
 #endif

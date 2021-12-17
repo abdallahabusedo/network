@@ -19,7 +19,7 @@
 #include <omnetpp.h>
 #include "MessageM_m.h"
 using namespace omnetpp;
-
+using namespace std;
 /**
  * TODO - Generated class
  */
@@ -28,6 +28,7 @@ class Receiver : public cSimpleModule
     int expectedMessageId;
     double sendingDelay = 0.2;
     bool getParityByte(MessageM_Base * message);
+    void logEvent(MessageM_Base* message,double time,string type);
   protected:
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);
