@@ -1,4 +1,43 @@
-- Sender sends message with type=0, id=0 and content [is the reproductive/$ structure found in flowering plants] at 5 with 
-- Receiver received message with type=0, id=0 and content [is the reproductive/$ structure found in flowering plants] at 5
-- Receiver sends ACK at 5
-- Sender received ACK at time 5.2
+- Sender sent message with id=0 and content $ flower, sometimes known as a bloom or blossom$ at 5 it has Modification Duplication 
+- Sender sent message with id=0 and content $ flower, sometimes known as a bloom or blossom$ at 5.01 it has Modification Duplication 
+- Receiver received message with id=0 and content $ flower, sometimes known as a bloom or blossom$ at 5
+- Receiver sent NACK at 5
+- Receiver received message with id=0 and content $ flower, sometimes known as a bloom or blossom$ at 5.01
+- Receiver sent NACK at 5.01
+- Sender received NACK at time 5.2
+- Sender re-sends correct message with id=0 and content $A flower, sometimes known as a bloom or blossom$ at 5.2
+- Receiver received message with id=0 and content $A flower, sometimes known as a bloom or blossom$ at 5.2
+- Receiver sent ACK at 5.2
+- Sender received NACK at time 5.21
+- Sender re-sends correct message with id=0 and content $A flower, sometimes known as a bloom or blossom$ at 5.21
+- Receiver received and discarded unexpected message at 5.21
+- Sender received ACK at time 5.4
+- Sender sent message with id=1 and content $is the reproductive/$ structure found in flowering plants$ at 5.4 it has 
+- Receiver received message with id=1 and content $is the reproductive/$ structure found in flowering plants$ at 5.4
+- Receiver sent ACK at 5.4
+- Sender received ACK at time 5.6
+- Sender got timeout
+- Sender re-sends correct message with id=0 and content $(plants of the division Magnoliophyta, also called// angiosperms/$).$ at 9.6
+- Receiver received message with id=0 and content $(plants of the division Magnoliophyta, also called// angiosperms/$).$ at 9.6
+- Receiver sent ACK at 9.6
+- Sender received ACK at time 9.8
+- Sender sent message with id=1 and content $The biological function of a flower is to facilitate reproduction,$ at 9.8 it has 
+- Receiver received message with id=1 and content $The biological function of a flower is to facilitate reproduction,$ at 9.8
+- Receiver sent ACK at 9.8
+- Sender received ACK at time 10
+- Sender sent message with id=0 and content $usually by providing a mechanism for the union of sperm with eggs.$ at 13 it has delay 
+- Receiver received message with id=0 and content $usually by providing a mechanism for the union of sperm with eggs.$ at 13
+- Receiver sent ACK at 13
+- Sender received ACK at time 13.2
+- Sender sent message with id=1 and content $Flowers may facilitate outcrossing/$$ at 13.2 it has 
+- Receiver received message with id=1 and content $Flowers may facilitate outcrossing/$$ at 13.2
+- Receiver sent ACK at 13.2
+- Sender received ACK at time 13.4
+- Sender sent message with id=0 and content $(fusion of sperm and eggs from different individuals in a population)$ at 13.4 it has 
+- Receiver received message with id=0 and content $(fusion of sperm and eggs from different individuals in a population)$ at 13.4
+- Receiver sent ACK at 13.4
+- Sender received ACK at time 13.6
+- ..............................
+- total transmission time=13.6
+- total number of transmissions=16
+- the network throughput=0.735294

@@ -21,7 +21,7 @@ package miniproject;
 simple Receiver
 {
     parameters:
-		string output_file="output0.txt"; 
+		string output_file; 
     gates: 
         input in;
         output out;
