@@ -7,7 +7,7 @@ packets may get corrupted, duplicated, delayed, or lost, and the buffers are of 
 ### It is an omnet++ project where two basic modules:
 #### 1. Sender module:
 - read the input given its name from the ini configuration file
--
+- ...
 
 #### 2. Receiver module:
 - receive a message with certain sequence number and apply error detection on based on parity bit checksum
