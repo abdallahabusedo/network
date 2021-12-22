@@ -54,25 +54,21 @@ void Receiver::initialize(){
 
 void Receiver::handleMessage(cMessage *msg) {
     MessageM_Base *mmsg = check_and_cast<MessageM_Base *>(msg);
-    if(mmsg->getId() == this->expectedMessageId){
-        this->logEvent(mmsg, simTime().dbl(), "receive");
-        if(this->getParityByte(mmsg)){
-            // ACK
-            MessageM_Base* ack = new MessageM_Base();
-            ack->setId(1-this->expectedMessageId);
-            ack->setType(1);
-            this->logEvent(nullptr, simTime().dbl(), "ack");
-            this->expectedMessageId = 1-this->expectedMessageId;
-            sendDelayed(ack, this->sendingDelay, "out");
-        } else {
-            // NACK
-            MessageM_Base* nack = new MessageM_Base();
-            nack->setId(this->expectedMessageId);
-            nack->setType(2);
-            this->logEvent(nullptr, simTime().dbl(), "nack");
-            sendDelayed(nack, this->sendingDelay, "out");
-        }
+    this->logEvent(mmsg, simTime().dbl(), "receive");
+    if(mmsg->getId() == this->expectedMessageId && this->getParityByte(mmsg)){
+        // ACK
+        MessageM_Base* ack = new MessageM_Base();
+        this->expectedMessageId = 1-this->expectedMessageId;
+        ack->setId(this->expectedMessageId);
+        ack->setType(1);
+        this->logEvent(nullptr, simTime().dbl(), "ack");
+        sendDelayed(ack, this->sendingDelay, "out");
     } else {
-        this->logEvent(nullptr, simTime().dbl(), "discard");
+        // NACK
+        MessageM_Base* nack = new MessageM_Base();
+        nack->setId(this->expectedMessageId);
+        nack->setType(2);
+        this->logEvent(nullptr, simTime().dbl(), "nack");
+        sendDelayed(nack, this->sendingDelay, "out");
     }
 }

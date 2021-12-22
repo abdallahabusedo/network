@@ -24,7 +24,7 @@
 #include "MessageM_m.h"
 Define_Module(Sender);
 using namespace std;
-
+// sedo
 void Sender::extractErrorBytes(MessageM_Base * message){
     string temp = message->getPayload();
     this->errorString = "";
@@ -46,14 +46,13 @@ void Sender::extractErrorBytes(MessageM_Base * message){
         this->errorString.append("delay ");
     }
 }
-
+// sedo
 void Sender::addHeader(MessageM_Base * message, int id, int type, double sending_time){
-    // need to fix as receiver can extract header in all cases
     message->setId(id);
     message->setType(type);
     message->setSendingTime(sending_time);
 }
-
+// hema
 void Sender::modeification(MessageM_Base* message){
     string payload = message->getPayload();
     int count = payload.size();
@@ -64,7 +63,7 @@ void Sender::modeification(MessageM_Base* message){
     payload[ind]= char(b.to_ullong());
     message->setPayload(payload.c_str());
 }
-
+// hema
 void Sender::parityBit(MessageM_Base * message){
     string payload = message->getPayload();
     bitset<8> b(payload[0]);
@@ -74,7 +73,7 @@ void Sender::parityBit(MessageM_Base * message){
     }
     message->setTrailer(b);
 }
-
+// sedo
 void Sender::logEvent(MessageM_Base* message,double time,string type) {
     std::ofstream out;
     out.open(par("output_file").stringValue(),std::ios_base::app);
@@ -88,12 +87,16 @@ void Sender::logEvent(MessageM_Base* message,double time,string type) {
         out<<"- Sender received ACK at time " <<time<< endl;
     } else if(type == "nack"){
         this->numberOfTransmissions++;
-        out<<"- Sender received NACK at time " <<time<< endl;
+        out<<"- Sender received NACK due to err or dup at time " <<time<< endl;
     } else if(type == "timeout"){
-        out<<"- Sender got timeout"<<endl;
+        out<<"- Sender got timeout at "<<time<<endl;
+    } else if(type == "loss"){
+        this->numberOfTransmissions++;
+        out<<"- Sender did not send message with id="<<message->getId()
+           <<" and content "<<message->getPayload()<<" at time "<<time<<" due to loss"<<endl;
     } else if(type == "resend"){
-        this->numberOfDataTransmissions++;
-        out<<"- Sender re-sends correct message with id="<<message->getId()
+        this->numberOfTransmissions++,this->numberOfDataTransmissions++;
+        out<<"- Sender re-sends message with id="<<message->getId()
            <<" and content "<<message->getPayload()
            <<" at "<<time<<endl;
     } else if(type == "stats"){
@@ -104,7 +107,7 @@ void Sender::logEvent(MessageM_Base* message,double time,string type) {
     }
     out.close();
 }
-
+// bahaa
 void Sender::makeSend(MessageM_Base * msg){
     if(msg->getMode()){
          this->modeification(msg);
@@ -136,9 +139,11 @@ void Sender::makeSend(MessageM_Base * msg){
                  send(msg,"out");
              }
          }
+    } else {
+        this->logEvent(msg,simTime().dbl(), "loss");
     }
 }
-
+// hema
 void Sender::byteStuffing (MessageM_Base* message) {
     string temp = message->getPayload();
     temp.insert(0, "$");
@@ -151,7 +156,7 @@ void Sender::byteStuffing (MessageM_Base* message) {
     temp.append("$");
     message->setPayload(temp.c_str());
 }
-
+// hema
 void Sender::readFile(string fileName){
     ifstream inputFile(fileName);
     string line ;
@@ -160,7 +165,7 @@ void Sender::readFile(string fileName){
     }
     inputFile.close();
 }
-
+// sedo
 MessageM_Base * Sender::operations(string message, int id){
     MessageM_Base * toSend = new MessageM_Base();
     toSend->setPayload(message.c_str());
@@ -183,7 +188,7 @@ void Sender::initialize()
     this->numberOfDataTransmissions = 0;
     scheduleAt(par("start_transmission_time"),new cMessage("transmit message"));
 }
-
+// bahaa
 void Sender::handleMessage(cMessage *msg) {
     if(this->messeages.empty()) return;
     string current = this->messeages[0];
@@ -195,7 +200,7 @@ void Sender::handleMessage(cMessage *msg) {
              scheduleAt(simTime().dbl()+par("timeout_interval").doubleValue(), this->timeoutChecker);
         } else if(!strcmp(msg->getName(), "have timeout")) {
              // timeout
-             cancelEvent(this->timeoutChecker);
+             //cancelEvent(this->timeoutChecker);
              this->logEvent(nullptr,simTime().dbl(),"timeout");
              send(toSend, "out");
              this->logEvent(toSend,simTime().dbl(),"resend");
@@ -203,9 +208,9 @@ void Sender::handleMessage(cMessage *msg) {
         }
     } else {
         MessageM_Base *mmsg = check_and_cast<MessageM_Base *>(msg);
-        cancelEvent(this->timeoutChecker);
         if(mmsg->getType()==1){
             // ACK
+            cancelEvent(this->timeoutChecker);
             this->logEvent(nullptr,simTime().dbl(),"ack");
             this->messeages.pop_front();
             this->incrementalId = 1 - this->incrementalId;
@@ -213,9 +218,6 @@ void Sender::handleMessage(cMessage *msg) {
         } else {
             // NACK
             this->logEvent(nullptr,simTime().dbl(),"nack");
-            send(toSend, "out");
-            this->logEvent(toSend,simTime().dbl(),"resend");
-            scheduleAt(simTime().dbl()+par("timeout_interval").doubleValue(), this->timeoutChecker);
         }
     }
 }
