@@ -56,10 +56,10 @@ void Sender::addHeader(MessageM_Base * message, int id, int type, double sending
 void Sender::applyModeification(MessageM_Base* message){
     string payload = message->getPayload();
     int count = payload.size();
-    int ind = rand()%(count+1);
+    int ind = rand()%(count);
     bitset<8> b(payload[ind]);
-    int ind2 = rand()%(9);
-    b[ind2-1].flip();
+    int ind2 = rand()%(8);
+    b[ind2].flip();
     payload[ind]= char(b.to_ullong());
     message->setPayload(payload.c_str());
 }
