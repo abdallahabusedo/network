@@ -26,22 +26,22 @@ Define_Module(Sender);
 using namespace std;
 // sedo
 void Sender::extractErrorBytes(MessageM_Base * message){
-    string temp = message->getPayload();
+    string errorBits = message->getPayload();
     this->errorString = "";
-    temp = temp.substr(0, 4);
-    if (temp[0] == '1' ){
+    errorBits = errorBits.substr(0, 4);
+    if (errorBits[0] == '1' ){
         message->setMode(1);
         this->errorString.append("Modification ");
     }
-    if (temp[1]== '1'){
+    if (errorBits[1]== '1'){
         message->setLoss(1);
         this->errorString.append("loss ");
     }
-    if (temp[2] == '1'){
+    if (errorBits[2] == '1'){
         message->setDuple(1);
         this->errorString.append("Duplication ");
     }
-    if (temp[3] == '1'){
+    if (errorBits[3] == '1'){
         message->setDelay(1);
         this->errorString.append("delay ");
     }
@@ -53,7 +53,7 @@ void Sender::addHeader(MessageM_Base * message, int id, int type, double sending
     message->setSendingTime(sending_time);
 }
 // hema
-void Sender::modeification(MessageM_Base* message){
+void Sender::applyModeification(MessageM_Base* message){
     string payload = message->getPayload();
     int count = payload.size();
     int ind = rand()%(count+1);
@@ -64,7 +64,7 @@ void Sender::modeification(MessageM_Base* message){
     message->setPayload(payload.c_str());
 }
 // hema
-void Sender::parityBit(MessageM_Base * message){
+void Sender::addTrailer(MessageM_Base * message){
     string payload = message->getPayload();
     bitset<8> b(payload[0]);
     for (int i = 1; i < payload.size(); i++) {
@@ -108,112 +108,111 @@ void Sender::logEvent(MessageM_Base* message,double time,string type) {
     out.close();
 }
 // bahaa
-void Sender::makeSend(MessageM_Base * msg){
-    if(msg->getMode()){
-         this->modeification(msg);
+void Sender::applyErrorDelayAndSend(MessageM_Base * message){
+    if(message->getMode()){
+         this->applyModeification(message);
     }
-    EV<<msg->getPayload()<<endl;
-    MessageM_Base * dupMsg = msg->dup();
-    if(!msg->getLoss()){
-         if(msg->getDuple()){
-             if(msg->getDelay()){
-                 this->logEvent(msg,simTime().dbl()+par("delay_time").doubleValue(),"send");
-                 sendDelayed(msg, par("delay_time").doubleValue(), "out");
-                 this->logEvent(msg,simTime().dbl()+0.01+par("delay_time").doubleValue(),"send");
-                 sendDelayed(dupMsg, 0.01+par("delay_time").doubleValue(), "out");
+    MessageM_Base * duplicatedMessage = message->dup();
+    if(!message->getLoss()){
+         if(message->getDuple()){
+             if(message->getDelay()){
+                 this->logEvent(message,simTime().dbl()+par("delay_time").doubleValue(),"send");
+                 sendDelayed(message, par("delay_time").doubleValue(), "out");
+                 this->logEvent(duplicatedMessage,simTime().dbl()+0.01+par("delay_time").doubleValue(),"send");
+                 sendDelayed(duplicatedMessage, 0.01+par("delay_time").doubleValue(), "out");
              }
              else{
-                 this->logEvent(msg,simTime().dbl(), "send");
-                 send(msg, "out");
-                 this->logEvent(dupMsg,simTime().dbl()+0.01, "send");
-                 sendDelayed(dupMsg, 0.01, "out");
+                 this->logEvent(message,simTime().dbl(), "send");
+                 send(message, "out");
+                 this->logEvent(duplicatedMessage,simTime().dbl()+0.01, "send");
+                 sendDelayed(duplicatedMessage, 0.01, "out");
              }
          }
          else{
-             if(msg->getDelay()){
-                 this->logEvent(msg,simTime().dbl()+par("delay_time").doubleValue(),"send");
-                 sendDelayed(msg,par("delay_time").doubleValue(), "out");
+             if(message->getDelay()){
+                 this->logEvent(message,simTime().dbl()+par("delay_time").doubleValue(),"send");
+                 sendDelayed(message,par("delay_time").doubleValue(), "out");
              }
              else{
-                 this->logEvent(msg,simTime().dbl(), "send");
-                 send(msg,"out");
+                 this->logEvent(message,simTime().dbl(), "send");
+                 send(message,"out");
              }
          }
     } else {
-        this->logEvent(msg,simTime().dbl(), "loss");
+        this->logEvent(message,simTime().dbl(), "loss");
     }
 }
 // hema
 void Sender::byteStuffing (MessageM_Base* message) {
-    string temp = message->getPayload();
-    temp.insert(0, "$");
-    for (int i  = 1; i  < temp.size(); i++ ) {
-       if (temp[i] == '$' || temp[i] == '/') {
-           temp.insert(i, "/");
+    string stuffedPayload = message->getPayload();
+    stuffedPayload.insert(0, "$");
+    for (int i  = 1; i  < stuffedPayload.size(); i++ ) {
+       if (stuffedPayload[i] == '$' || stuffedPayload[i] == '/') {
+           stuffedPayload.insert(i, "/");
             i++;
        }
     }
-    temp.append("$");
-    message->setPayload(temp.c_str());
+    stuffedPayload.append("$");
+    message->setPayload(stuffedPayload.c_str());
 }
 // hema
 void Sender::readFile(string fileName){
     ifstream inputFile(fileName);
     string line ;
     while(getline(inputFile,line)){
-        this->messeages.push_back(line);
+        this->plainMesseages.push_back(line);
     }
     inputFile.close();
 }
 // sedo
-MessageM_Base * Sender::operations(string message, int id){
-    MessageM_Base * toSend = new MessageM_Base();
-    toSend->setPayload(message.c_str());
-    this->extractErrorBytes(toSend);
-    string payload = toSend->getPayload();
+MessageM_Base * Sender::prepareMessage(string message, int id){
+    MessageM_Base * preparedMessage = new MessageM_Base();
+    preparedMessage->setPayload(message.c_str());
+    this->extractErrorBytes(preparedMessage);
+    string payload = preparedMessage->getPayload();
     payload = payload.substr(5,message.size());
-    toSend->setPayload(payload.c_str());
-    this->byteStuffing(toSend);
-    this->addHeader(toSend, id, 0, simTime().dbl());
-    this->parityBit(toSend);
-    return toSend;
+    preparedMessage->setPayload(payload.c_str());
+    this->byteStuffing(preparedMessage);
+    this->addHeader(preparedMessage, id, 0, simTime().dbl());
+    this->addTrailer(preparedMessage);
+    return preparedMessage;
 }
 
 void Sender::initialize()
 {
     this->readFile(par("input_file"));
     this->timeoutChecker = new cMessage("have timeout");
-    this->incrementalId = 0;
+    this->sequenceNumber = 0;
     this->numberOfTransmissions = 0;
     this->numberOfDataTransmissions = 0;
     scheduleAt(par("start_transmission_time"),new cMessage("transmit message"));
 }
 // bahaa
 void Sender::handleMessage(cMessage *msg) {
-    if(this->messeages.empty()) return;
-    string current = this->messeages[0];
-    MessageM_Base * toSend = operations(current,this->incrementalId);
+    if(this->plainMesseages.empty()) return;
+    string current = this->plainMesseages[0];
+    MessageM_Base * nextMessageToSend = prepareMessage(current,this->sequenceNumber);
 
     if(msg->isSelfMessage()){
         if(!strcmp(msg->getName(), "transmit message")){
-             this->makeSend(toSend);
+             this->applyErrorDelayAndSend(nextMessageToSend);
              scheduleAt(simTime().dbl()+par("timeout_interval").doubleValue(), this->timeoutChecker);
         } else if(!strcmp(msg->getName(), "have timeout")) {
              // timeout
              //cancelEvent(this->timeoutChecker);
              this->logEvent(nullptr,simTime().dbl(),"timeout");
-             send(toSend, "out");
-             this->logEvent(toSend,simTime().dbl(),"resend");
+             send(nextMessageToSend, "out");
+             this->logEvent(nextMessageToSend,simTime().dbl(),"resend");
              scheduleAt(simTime().dbl()+par("timeout_interval").doubleValue(), this->timeoutChecker);
         }
     } else {
-        MessageM_Base *mmsg = check_and_cast<MessageM_Base *>(msg);
-        if(mmsg->getType()==1){
+        MessageM_Base *receiverResponse = check_and_cast<MessageM_Base *>(msg);
+        if(receiverResponse->getType()==1){
             // ACK
             cancelEvent(this->timeoutChecker);
             this->logEvent(nullptr,simTime().dbl(),"ack");
-            this->messeages.pop_front();
-            this->incrementalId = 1 - this->incrementalId;
+            this->plainMesseages.pop_front();
+            this->sequenceNumber = 1 - this->sequenceNumber;
             scheduleAt(simTime().dbl(), new cMessage("transmit message"));
         } else {
             // NACK

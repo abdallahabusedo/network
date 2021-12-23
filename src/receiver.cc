@@ -21,7 +21,7 @@ using namespace std;
 
 Define_Module(Receiver);
 
-bool Receiver::getParityByte(MessageM_Base * message){
+bool Receiver::checkCorrectMessage(MessageM_Base * message){
     string payload = message->getPayload();
     bitset<8> b(payload[0]);
     for (int i = 1; i < payload.size(); i++) {
@@ -49,24 +49,24 @@ void Receiver::logEvent(MessageM_Base* message,double time,string type) {
 }
 
 void Receiver::initialize(){
-    this->expectedMessageId = 0;
+    this->expectedSequenceNumber = 0;
 }
 
 void Receiver::handleMessage(cMessage *msg) {
-    MessageM_Base *mmsg = check_and_cast<MessageM_Base *>(msg);
-    this->logEvent(mmsg, simTime().dbl(), "receive");
-    if(mmsg->getId() == this->expectedMessageId && this->getParityByte(mmsg)){
+    MessageM_Base *senderMessage = check_and_cast<MessageM_Base *>(msg);
+    this->logEvent(senderMessage, simTime().dbl(), "receive");
+    if(senderMessage->getId() == this->expectedSequenceNumber && this->checkCorrectMessage(senderMessage)){
         // ACK
         MessageM_Base* ack = new MessageM_Base();
-        this->expectedMessageId = 1-this->expectedMessageId;
-        ack->setId(this->expectedMessageId);
+        this->expectedSequenceNumber = 1 - this->expectedSequenceNumber;
+        ack->setId(this->expectedSequenceNumber);
         ack->setType(1);
         this->logEvent(nullptr, simTime().dbl(), "ack");
         sendDelayed(ack, this->sendingDelay, "out");
     } else {
         // NACK
         MessageM_Base* nack = new MessageM_Base();
-        nack->setId(this->expectedMessageId);
+        nack->setId(this->expectedSequenceNumber);
         nack->setType(2);
         this->logEvent(nullptr, simTime().dbl(), "nack");
         sendDelayed(nack, this->sendingDelay, "out");

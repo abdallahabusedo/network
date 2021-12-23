@@ -25,9 +25,9 @@ using namespace std;
  */
 class Receiver : public cSimpleModule
 {
-    int expectedMessageId;
+    int expectedSequenceNumber;
     double sendingDelay = 0.2;
-    bool getParityByte(MessageM_Base * message);
+    bool checkCorrectMessage(MessageM_Base * message);
     void logEvent(MessageM_Base* message,double time,string type);
   protected:
     virtual void initialize();
