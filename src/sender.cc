@@ -24,7 +24,7 @@
 #include "MessageM_m.h"
 Define_Module(Sender);
 using namespace std;
-// sedo
+
 void Sender::extractErrorBytes(MessageM_Base * message){
     string errorBits = message->getPayload();
     this->errorString = "";
@@ -46,13 +46,13 @@ void Sender::extractErrorBytes(MessageM_Base * message){
         this->errorString.append("delay ");
     }
 }
-// sedo
+
 void Sender::addHeader(MessageM_Base * message, int id, int type, double sending_time){
     message->setId(id);
     message->setType(type);
     message->setSendingTime(sending_time);
 }
-// hema
+
 void Sender::applyModeification(MessageM_Base* message){
     string payload = message->getPayload();
     int count = payload.size();
@@ -63,7 +63,7 @@ void Sender::applyModeification(MessageM_Base* message){
     payload[ind]= char(b.to_ullong());
     message->setPayload(payload.c_str());
 }
-// hema
+
 void Sender::addTrailer(MessageM_Base * message){
     string payload = message->getPayload();
     bitset<8> b(payload[0]);
@@ -73,7 +73,7 @@ void Sender::addTrailer(MessageM_Base * message){
     }
     message->setTrailer(b);
 }
-// sedo
+
 void Sender::logEvent(MessageM_Base* message,double time,string type) {
     std::ofstream out;
     out.open(par("output_file").stringValue(),std::ios_base::app);
@@ -107,7 +107,7 @@ void Sender::logEvent(MessageM_Base* message,double time,string type) {
     }
     out.close();
 }
-// bahaa
+
 void Sender::applyErrorDelayAndSend(MessageM_Base * message){
     if(message->getMode()){
          this->applyModeification(message);
@@ -142,7 +142,7 @@ void Sender::applyErrorDelayAndSend(MessageM_Base * message){
         this->logEvent(message,simTime().dbl(), "loss");
     }
 }
-// hema
+
 void Sender::byteStuffing (MessageM_Base* message) {
     string stuffedPayload = message->getPayload();
     stuffedPayload.insert(0, "$");
@@ -155,7 +155,7 @@ void Sender::byteStuffing (MessageM_Base* message) {
     stuffedPayload.append("$");
     message->setPayload(stuffedPayload.c_str());
 }
-// hema
+
 void Sender::readFile(string fileName){
     ifstream inputFile(fileName);
     string line ;
@@ -164,7 +164,7 @@ void Sender::readFile(string fileName){
     }
     inputFile.close();
 }
-// sedo
+
 MessageM_Base * Sender::prepareMessage(string message, int id){
     MessageM_Base * preparedMessage = new MessageM_Base();
     preparedMessage->setPayload(message.c_str());
@@ -187,7 +187,7 @@ void Sender::initialize()
     this->numberOfDataTransmissions = 0;
     scheduleAt(par("start_transmission_time"),new cMessage("transmit message"));
 }
-// bahaa
+
 void Sender::handleMessage(cMessage *msg) {
     if(this->plainMesseages.empty()) return;
     string current = this->plainMesseages[0];
@@ -199,7 +199,6 @@ void Sender::handleMessage(cMessage *msg) {
              scheduleAt(simTime().dbl()+par("timeout_interval").doubleValue(), this->timeoutChecker);
         } else if(!strcmp(msg->getName(), "have timeout")) {
              // timeout
-             //cancelEvent(this->timeoutChecker);
              this->logEvent(nullptr,simTime().dbl(),"timeout");
              send(nextMessageToSend, "out");
              this->logEvent(nextMessageToSend,simTime().dbl(),"resend");
