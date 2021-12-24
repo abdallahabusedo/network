@@ -1,0 +1,33 @@
+- Sender sent message with id=0 and content $A cherry blossom is a flower of many trees of genus/$ Prunus or Prunus subg.$ at 8 it has delay 
+- Receiver received message with id=0 and content $A cherry blossom is a flower of many trees of genus/$ Prunus or Prunus subg.$ at 8
+- Receiver sent ACK at 8
+- Sender received ACK at time 8.2
+- Sender sent message with id=1 and content $They are also known as Japanese cherry and Sakura$ at 11.2 it has Duplication delay 
+- Sender sent message with id=1 and content $They are also known as Japanese cherry and Sakura$ at 11.21 it has Duplication delay 
+- Receiver received message with id=1 and content $They are also known as Japanese cherry and Sakura$ at 11.2
+- Receiver sent ACK at 11.2
+- Receiver received message with id=1 and content $They are also known as Japanese cherry and Sakura$ at 11.21
+- Receiver sent NACK at 11.21
+- Sender received ACK at time 11.4
+- Sender sent message with id=0 and content $They generally refer to /$ ornamental cherry trees,$ at 11.4 it has 
+- Receiver received message with id=0 and content $They generally refer to /$ ornamental cherry trees,$ at 11.4
+- Receiver sent ACK at 11.4
+- Sender received NACK due to err or dup at time 11.41
+- Sender received ACK at time 11.6
+- Sender sent message with id=1 and content $not to be confused with cherry trees that// produce fruit for eating.$ at 11.6 it has 
+- Receiver received message with id=1 and content $not to be confused with cherry trees that// produce fruit for eating.$ at 11.6
+- Receiver sent ACK at 11.6
+- Sender received ACK at time 11.8
+- Sender sent message with id=0 and content $It is considered// the national flower of$Japan.$ at 11.8 it has Modification 
+- Receiver received message with id=0 and content $It is considered// the national flower of$Japan.$ at 11.8
+- Receiver sent NACK at 11.8
+- Sender received NACK due to err or dup at time 12
+- Sender got timeout at 15.8
+- Sender re-sends message with id=0 and content $It is considered// the national flower of Japan.$ at 15.8
+- Receiver received message with id=0 and content $It is considered// the national flower of Japan.$ at 15.8
+- Receiver sent ACK at 15.8
+- Sender received ACK at time 16
+- ..............................
+- total transmission time=11
+- total number of transmissions=14
+- the network throughput=0.636364

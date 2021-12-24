@@ -91,7 +91,7 @@ void Sender::logEvent(MessageM_Base* message,double time,string type) {
     } else if(type == "timeout"){
         out<<"- Sender got timeout at "<<time<<endl;
     } else if(type == "loss"){
-        this->numberOfTransmissions++;
+        this->numberOfTransmissions++,this->numberOfDataTransmissions++;
         out<<"- Sender did not send message with id="<<message->getId()
            <<" and content "<<message->getPayload()<<" at time "<<time<<" due to loss"<<endl;
     } else if(type == "resend"){
@@ -101,9 +101,9 @@ void Sender::logEvent(MessageM_Base* message,double time,string type) {
            <<" at "<<time<<endl;
     } else if(type == "stats"){
         out<<"- .............................."<<endl
-        <<"- total transmission time="<<simTime()<<endl
+        <<"- total transmission time="<<simTime()-par("start_transmission_time").doubleValue()<<endl
         <<"- total number of transmissions="<<this->numberOfTransmissions<<endl
-        <<"- the network throughput="<<(this->numberOfDataTransmissions/simTime().dbl())<<endl;
+        <<"- the network throughput="<<(this->numberOfDataTransmissions/(simTime()-par("start_transmission_time").doubleValue()))<<endl;
     }
     out.close();
 }

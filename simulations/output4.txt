@@ -1,0 +1,72 @@
+- Sender sent message with id=0 and content $An electric car is at 5 it has Modification 
+- Receiver received message with id=0 and content $An electric car is at 5
+- Receiver sent NACK at 5
+- Sender received NACK due to err or dup at time 5.2
+- Sender got timeout at 9
+- Sender re-sends message with id=0 and content $An electric car is an automobile that is$ at 9
+- Receiver received message with id=0 and content $An electric car is an automobile that is$ at 9
+- Receiver sent ACK at 9
+- Sender received ACK at time 9.2
+- Sender sent message with id=1 and content $propelled by one or more electric motors,$ at 9.2 it has 
+- Receiver received message with id=1 and content $propelled by one or more electric motors,$ at 9.2
+- Receiver sent ACK at 9.2
+- Sender received ACK at time 9.4
+- Sender sent message with id=0 and content $using energy stored in batteries.$ at 9.4 it has 
+- Receiver received message with id=0 and content $using energy stored in batteries.$ at 9.4
+- Receiver sent ACK at 9.4
+- Sender received ACK at time 9.6
+- Sender sent message with id=1 and content $Compared to internal combustion engine (ICE) vehicles,$ at 9.6 it has Duplication 
+- Sender sent message with id=1 and content $Compared to internal combustion engine (ICE) vehicles,$ at 9.61 it has Duplication 
+- Receiver received message with id=1 and content $Compared to internal combustion engine (ICE) vehicles,$ at 9.6
+- Receiver sent ACK at 9.6
+- Receiver received message with id=1 and content $Compared to internal combustion engine (ICE) vehicles,$ at 9.61
+- Receiver sent NACK at 9.61
+- Sender received ACK at time 9.8
+- Sender sent message with id=0 and content $electric cars are quieter,$ at 12.8 it has Duplication delay 
+- Sender sent message with id=0 and content $electric cars are quieter,$ at 12.81 it has Duplication delay 
+- Sender received NACK due to err or dup at time 9.81
+- Receiver received message with id=0 and content $electric cars are quieter,$ at 12.8
+- Receiver sent ACK at 12.8
+- Receiver received message with id=0 and content $electric cars are quieter,$ at 12.81
+- Receiver sent NACK at 12.81
+- Sender received ACK at time 13
+- Sender sent message with id=1 and content $have no exhaust emissions, and lower emissions overall.$ at 13 it has 
+- Receiver received message with id=1 and content $have no exhaust emissions, and lower emissions overall.$ at 13
+- Receiver sent ACK at 13
+- Sender received NACK due to err or dup at time 13.01
+- Sender received ACK at time 13.2
+- Sender sent message with id=0 and content $In the United States and the European Union,$ at 13.2 it has 
+- Receiver received message with id=0 and content $In the United States and the European Union,$ at 13.2
+- Receiver sent ACK at 13.2
+- Sender received ACK at time 13.4
+- Sender sent message with id=1 and content $as of 2020, the total cost of ownership of recent electryc vehicles$ at 13.4 it has Modification 
+- Receiver received message with id=1 and content $as of 2020, the total cost of ownership of recent electryc vehicles$ at 13.4
+- Receiver sent NACK at 13.4
+- Sender received NACK due to err or dup at time 13.6
+- Sender got timeout at 17.4
+- Sender re-sends message with id=1 and content $as of 2020, the total cost of ownership of recent electric vehicles$ at 17.4
+- Receiver received message with id=1 and content $as of 2020, the total cost of ownership of recent electric vehicles$ at 17.4
+- Receiver sent ACK at 17.4
+- Sender received ACK at time 17.6
+- Sender sent message with id=0 and content $is cheaper/$ than that of equivalent ICE cars,$ at 17.6 it has 
+- Receiver received message with id=0 and content $is cheaper/$ than that of equivalent ICE cars,$ at 17.6
+- Receiver sent ACK at 17.6
+- Sender received ACK at time 17.8
+- Sender sent message with id=1 and content $due to lower fueling and maintenance costs/$/$.$ at 17.8 it has 
+- Receiver received message with id=1 and content $due to lower fueling and maintenance costs/$/$.$ at 17.8
+- Receiver sent ACK at 17.8
+- Sender received ACK at time 18
+- Sender sent message with id=0 and content $Charging an electric car can be done at a variety of charging stations;$ at 18 it has 
+- Receiver received message with id=0 and content $Charging an electric car can be done at a variety of charging stations;$ at 18
+- Receiver sent ACK at 18
+- Sender received ACK at time 18.2
+- Sender did not send message with id=1 and content $these!charging stations can be installed in both houses// and public areas.$ at time 18.2 due to loss
+- Sender got timeout at 22.2
+- Sender re-sends message with id=1 and content $these charging stations can be installed in both houses// and public areas.$ at 22.2
+- Receiver received message with id=1 and content $these charging stations can be installed in both houses// and public areas.$ at 22.2
+- Receiver sent ACK at 22.2
+- Sender received ACK at time 22.4
+- ..............................
+- total transmission time=17.4
+- total number of transmissions=33
+- the network throughput=0.977011
